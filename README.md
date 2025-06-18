@@ -93,6 +93,9 @@ docker compose build
 # Start services with automatic security setup
 docker compose up -d
 
+# Wait for all services to initialize (30-60 seconds)
+# You may see some FORBIDDEN messages in logs - this is normal during setup
+
 # Verify all services are healthy
 docker compose ps
 ```
@@ -102,17 +105,30 @@ The system will automatically:
 2. Create your custom user with secure authentication
 3. Initialize the scraper with encrypted connections
 
+**⚠️ Important**: During startup, you may see authentication warnings in the logs. This is expected behavior as the security system initializes. Wait for the security-setup container to show `✅ Custom user authentication successful!` before proceeding.
+
 ### Step 5: Verify Security Setup
 
 Test that SSL and authentication are working:
 
 ```bash
+# First, check that security setup completed successfully
+docker compose logs security-setup | grep "✅"
+
 # Test SSL connection (should return cluster health)
 source .env && curl -k -u ${OPENSEARCH_SCRAPER_USER}:${OPENSEARCH_SCRAPER_PASSWORD} https://localhost:9200/_cluster/health
 
 # Verify certificate details
 openssl x509 -in certs/opensearch.pem -text -noout | grep -A 5 "Subject:"
+
+# Check scraper is running without connection errors
+docker compose logs scraper --tail=20
 ```
+
+**Expected Results**:
+- Security setup logs should show: `✅ Custom user authentication successful!`
+- SSL connection should return cluster health JSON (may be empty `{}` but no errors)
+- Scraper logs should show successful OpenSearch connection
 
 ## 📊 Configuration
 
@@ -493,6 +509,8 @@ source .env && curl -k -u ${OPENSEARCH_SCRAPER_USER}:${OPENSEARCH_SCRAPER_PASSWO
 | **Firefox WebDriver Issues** | Selenium errors | Run `docker compose exec scraper python3 test_tor_connection.py` |
 | **Permission Errors** | File access denied | Run `chmod +x generate-certs.sh setup-security.sh` |
 | **OpenSearch Security Errors** | `StaticResourceException`, `Not yet initialized` | Fix certificate permissions and restart containers |
+| **Scraper Connection Failures** | `Failed to connect to OpenSearch after multiple retries` | See [Authentication Issues](#authentication-issues) below |
+| **Security Setup Warnings** | `FORBIDDEN` messages in security-setup logs | Normal behavior - see [Security Setup Notes](#security-setup-notes) |
 
 ### Certificate Permission Issues
 
@@ -512,6 +530,54 @@ docker compose up -d
 # Verify permissions are correct
 ls -la certs/
 # Should show: drwx------ for directory, -rw------- for .pem files
+```
+
+### Authentication Issues
+
+If you see `Failed to connect to OpenSearch after multiple retries` in scraper logs:
+
+**This is usually temporary during startup**. The issue occurs because:
+
+1. **Security Setup Process**: The custom user creation may show `FORBIDDEN` errors in logs, but this is normal
+2. **Startup Timing**: The scraper may start before user creation is fully complete
+3. **Permission Warnings**: Admin user permission warnings are expected behavior
+
+**Solutions:**
+
+```bash
+# 1. Wait for all containers to fully initialize (30-60 seconds)
+docker compose ps
+
+# 2. Check if containers are running and healthy
+docker compose logs security-setup | grep "✅"
+
+# 3. If scraper keeps failing, restart just the scraper:
+docker compose restart scraper
+
+# 4. Monitor scraper logs for successful connection:
+docker compose logs -f scraper
+```
+
+### Security Setup Notes
+
+**Expected Behavior**: You will see these messages in security-setup logs - **this is normal**:
+```
+{"status":"FORBIDDEN","message":"No permission to access REST API: User admin with Security roles [own_index] does not have any role privileged for admin access"}
+```
+
+**What's happening**:
+- The default admin user has limited permissions by design
+- Custom user creation still succeeds despite these warnings
+- The security-setup container will show `✅ Custom user authentication successful!` when complete
+
+**If authentication completely fails**:
+```bash
+# Test the custom user connection manually
+source .env && curl -k -u $OPENSEARCH_SCRAPER_USER:$OPENSEARCH_SCRAPER_PASSWORD https://localhost:9200/_cluster/health
+
+# If this fails, restart with fresh data:
+docker compose down -v
+docker compose up -d
 ```
 
 ### Security Verification
@@ -622,3 +688,32 @@ dark_web_scrapper/
 4. **Monitor access logs** - Check OpenSearch logs for unauthorized access
 5. **Keep certificates secure** - Protect the `certs/` directory
 6. **Use custom usernames** - Avoid common names like 'admin', 'root', 'user'
+
+## 🚨 Important Setup Notes
+
+### First-Time Setup
+- **Allow 30-60 seconds** for all containers to fully initialize
+- **FORBIDDEN messages** in security-setup logs are normal during startup
+- **Wait for confirmation** before testing connections: `✅ Custom user authentication successful!`
+
+### If Setup Fails
+```bash
+# Complete reset (removes all data)
+docker compose down -v
+docker compose up -d
+
+# Partial reset (keeps certificates)
+docker compose restart
+```
+
+### Monitoring Health
+```bash
+# Check all container status
+docker compose ps
+
+# Monitor real-time logs
+docker compose logs -f
+
+# Check specific service
+docker compose logs scraper --tail=50
+```
