@@ -131,9 +131,48 @@ docker compose logs scraper --tail=20
 - SSL connection should return cluster health JSON (may be empty `{}` but no errors)
 - Scraper logs should show successful OpenSearch connection
 
-### Step 6: View Scraped Data
+### Step 6: Access Scraped Data
 
-Once the scraper is running and collecting data, use the interactive data viewer:
+Once the scraper is running and collecting data, you have multiple ways to access the data:
+
+#### Option 1: REST API (Recommended)
+
+The system includes a FastAPI-based REST API for easy data access:
+
+```bash
+# The API starts automatically with docker compose
+# Access interactive documentation at: http://localhost:8000/docs
+
+# Check API health
+curl http://localhost:8000/health
+
+# Get data statistics
+curl http://localhost:8000/stats
+
+# Get all documents (paginated)
+curl "http://localhost:8000/documents?page=1&size=10"
+
+# Search through content
+curl "http://localhost:8000/search?q=bitcoin&size=5"
+
+# Get specific document by URL
+curl "http://localhost:8000/document?url=http://example.onion/page"
+
+# Get list of all URLs
+curl "http://localhost:8000/urls"
+```
+
+**API Features:**
+- **🔍 Full-text search**: Search through all scraped content
+- **📄 Document retrieval**: Get documents by URL or browse all
+- **📊 Statistics**: View scraping statistics and data insights
+- **🔗 URL listing**: Get all scraped URLs with pagination
+- **📖 Auto documentation**: Interactive API docs at `/docs`
+- **🔒 Secure**: SSL connection to OpenSearch with proper authentication
+
+#### Option 2: Interactive Data Viewer
+
+Use the command-line interactive viewer:
 
 ```bash
 # Install required dependencies (if not already installed)
@@ -143,15 +182,22 @@ uv add python-dotenv
 uv run python view_data.py
 ```
 
-The data viewer provides:
-- **📊 Document count**: See total number of scraped documents
-- **🔗 View all URLs**: List all scraped .onion URLs with timestamps
-- **📰 Browse content**: View latest documents with extracted text content
-- **🔍 Search functionality**: Search through scraped content by keywords
-- **📄 Full document view**: See complete content for any specific document
-- **💾 Export data**: Export all scraped data to JSON format
+#### Option 3: API Examples Script
 
-**Alternative - Direct OpenSearch Queries**:
+Run example API usage:
+
+```bash
+# Run API examples
+uv run python api_examples.py
+
+# Test all API endpoints
+uv run python test_api.py
+```
+
+#### Option 4: Direct OpenSearch Queries
+
+For advanced users, query OpenSearch directly:
+
 ```bash
 # Check document count
 source .env && curl -k -u ${OPENSEARCH_SCRAPER_USER}:${OPENSEARCH_SCRAPER_PASSWORD} "https://localhost:9200/darkweb-content/_count?pretty"
@@ -175,9 +221,15 @@ source .env && curl -k -u ${OPENSEARCH_SCRAPER_USER}:${OPENSEARCH_SCRAPER_PASSWO
 | `START_URLS` | Target .onion URLs | 🟡 Medium | `http://example.onion/` |
 | `OPENSEARCH_MASTER_KEY` | 32-char encryption key | 🔴 Critical | `abcd1234efgh5678ijkl9012mnop3456` |
 
-### OpenSearch Access
+### Service Access
 
-Once running, access OpenSearch securely:
+#### REST API
+- **URL**: `http://localhost:8000`
+- **Documentation**: `http://localhost:8000/docs`
+- **Health Check**: `http://localhost:8000/health`
+- **No authentication required** (configure for production use)
+
+#### OpenSearch (Direct Access)
 - **URL**: `https://localhost:9200` (HTTPS only)
 - **Username**: Your custom username from `.env`
 - **Password**: Your secure password from `.env`
@@ -237,6 +289,16 @@ The dark web scraper is a **production-grade, containerized system** designed fo
 │  │  │ Custom User Creation│  │      SSL Validation             │││
 │  │  │ (setup-security.sh) │  │                                 │││
 │  │  └─────────────────────┘  └─────────────────────────────────┘││
+│  └─────────────────────────────────────────────────────────────┘│
+│                              ▲                                  │
+│                              │ HTTPS/SSL                        │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │                    REST API Container                       ││
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  ││
+│  │  │   FastAPI   │  │ OpenSearch  │  │   Auto Docs         │  ││
+│  │  │   Server    │  │   Client    │  │ (Swagger/ReDoc)     │  ││
+│  │  │ Port 8000   │  │ SSL + Auth  │  │                     │  ││
+│  │  └─────────────┘  └─────────────┘  └─────────────────────┘  ││
 │  └─────────────────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────────┘
                               ▲

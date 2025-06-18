@@ -79,8 +79,40 @@ services:
       - OPENSEARCH_PASSWORD=${OPENSEARCH_SCRAPER_PASSWORD}
     command: /entrypoint.sh
 
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: dark-web-api
+    depends_on:
+      opensearch-node:
+        condition: service_healthy
+      security-setup:
+        condition: service_completed_successfully
+    networks:
+      - opensearch-net
+    environment:
+      - OPENSEARCH_HOST=opensearch-node
+      - OPENSEARCH_PORT=9200
+      - OPENSEARCH_SCHEME=https
+      - OPENSEARCH_USER=${OPENSEARCH_SCRAPER_USER}
+      - OPENSEARCH_PASSWORD=${OPENSEARCH_SCRAPER_PASSWORD}
+      - OPENSEARCH_INDEX=${OPENSEARCH_INDEX:-darkweb-content}
+      - OPENSEARCH_VERIFY_CERTS=false
+      - OPENSEARCH_SSL_SHOW_WARN=false
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 5s
+      retries: 3
+
 volumes:
   opensearch-data:
 
 networks:
-  opensearch-net: 
+  opensearch-net:
