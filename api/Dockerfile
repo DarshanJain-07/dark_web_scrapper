@@ -27,6 +27,7 @@ COPY --from=builder /app/.venv /app/.venv
 
 # Copy application code
 COPY api/ ./api/
+COPY deduplication/ ./deduplication/
 COPY pyproject.toml uv.lock README.md ./
 
 # Create non-root user for security

@@ -29,12 +29,13 @@ class DuplicateAnalyzer:
     
     def _get_opensearch_client(self) -> OpenSearch:
         """Create OpenSearch client."""
+        # Try both environment variable naming conventions
+        username = os.getenv('OPENSEARCH_SCRAPER_USER') or os.getenv('OPENSEARCH_USER')
+        password = os.getenv('OPENSEARCH_SCRAPER_PASSWORD') or os.getenv('OPENSEARCH_PASSWORD')
+
         return OpenSearch(
             hosts=[f"https://{os.getenv('OPENSEARCH_HOST', 'localhost')}:9200"],
-            http_auth=(
-                os.getenv('OPENSEARCH_SCRAPER_USER'),
-                os.getenv('OPENSEARCH_SCRAPER_PASSWORD')
-            ),
+            http_auth=(username, password),
             use_ssl=True,
             verify_certs=False,
             ssl_show_warn=False,
@@ -60,10 +61,11 @@ class DuplicateAnalyzer:
         url_timestamps = defaultdict(list)
         
         for doc in documents:
-            url = doc['_source']['url']
-            timestamp = doc['_source']['timestamp']
-            url_counts[url] += 1
-            url_timestamps[url].append(timestamp)
+            url = doc['_source'].get('url')
+            timestamp = doc['_source'].get('timestamp')
+            if url:  # Only process documents with valid URLs
+                url_counts[url] += 1
+                url_timestamps[url].append(timestamp)
         
         # Find duplicates
         duplicates = {url: count for url, count in url_counts.items() if count > 1}
@@ -95,12 +97,14 @@ class DuplicateAnalyzer:
         
         for doc in documents:
             content = doc['_source'].get('text_content', '')
-            if content:
+            url = doc['_source'].get('url')
+            timestamp = doc['_source'].get('timestamp')
+            if content and url:  # Only process documents with valid content and URL
                 # Create hash of content
                 content_hash = hashlib.md5(content.encode('utf-8')).hexdigest()
                 content_hashes[content_hash].append({
-                    'url': doc['_source']['url'],
-                    'timestamp': doc['_source']['timestamp'],
+                    'url': url,
+                    'timestamp': timestamp,
                     'content_length': len(content)
                 })
         
@@ -134,9 +138,10 @@ class DuplicateAnalyzer:
         url_timeline = defaultdict(list)
         
         for doc in documents:
-            url = doc['_source']['url']
-            timestamp = doc['_source']['timestamp']
-            url_timeline[url].append(timestamp)
+            url = doc['_source'].get('url')
+            timestamp = doc['_source'].get('timestamp')
+            if url and timestamp:  # Only process documents with valid URL and timestamp
+                url_timeline[url].append(timestamp)
         
         # Analyze patterns
         patterns = {
@@ -242,6 +247,9 @@ class DuplicateAnalyzer:
         recommendations = self.get_cleanup_recommendations(
             url_analysis, content_analysis, temporal_analysis
         )
+
+        # Filter out any None recommendations
+        recommendations = [rec for rec in recommendations if rec is not None]
         
         # Compile results
         results = {

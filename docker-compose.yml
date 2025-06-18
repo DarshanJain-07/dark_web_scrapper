@@ -102,6 +102,8 @@ services:
       - OPENSEARCH_SSL_SHOW_WARN=false
       - API_HOST=0.0.0.0
       - API_PORT=8000
+    volumes:
+      - ./deduplication:/app/deduplication:ro
     ports:
       - "8000:8000"
     healthcheck:

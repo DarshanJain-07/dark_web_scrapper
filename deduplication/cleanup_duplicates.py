@@ -43,12 +43,13 @@ class DuplicateCleanup:
     
     def _get_opensearch_client(self) -> OpenSearch:
         """Create OpenSearch client."""
+        # Try both environment variable naming conventions
+        username = os.getenv('OPENSEARCH_SCRAPER_USER') or os.getenv('OPENSEARCH_USER')
+        password = os.getenv('OPENSEARCH_SCRAPER_PASSWORD') or os.getenv('OPENSEARCH_PASSWORD')
+
         return OpenSearch(
             hosts=[f"https://{os.getenv('OPENSEARCH_HOST', 'localhost')}:9200"],
-            http_auth=(
-                os.getenv('OPENSEARCH_SCRAPER_USER'),
-                os.getenv('OPENSEARCH_SCRAPER_PASSWORD')
-            ),
+            http_auth=(username, password),
             use_ssl=True,
             verify_certs=False,
             ssl_show_warn=False,
