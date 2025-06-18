@@ -22,6 +22,7 @@ A secure, production-ready containerized dark web scraper built with Scrapy that
 
 - **Docker** and **Docker Compose** (v2.0+)
 - **OpenSSL** for certificate generation
+- **uv** package manager for Python dependencies
 - At least **4GB RAM** available for containers
 - Internet connection for Tor network access
 
@@ -129,6 +130,38 @@ docker compose logs scraper --tail=20
 - Security setup logs should show: `✅ Custom user authentication successful!`
 - SSL connection should return cluster health JSON (may be empty `{}` but no errors)
 - Scraper logs should show successful OpenSearch connection
+
+### Step 6: View Scraped Data
+
+Once the scraper is running and collecting data, use the interactive data viewer:
+
+```bash
+# Install required dependencies (if not already installed)
+uv add python-dotenv
+
+# Run the interactive data viewer
+uv run python view_data.py
+```
+
+The data viewer provides:
+- **📊 Document count**: See total number of scraped documents
+- **🔗 View all URLs**: List all scraped .onion URLs with timestamps
+- **📰 Browse content**: View latest documents with extracted text content
+- **🔍 Search functionality**: Search through scraped content by keywords
+- **📄 Full document view**: See complete content for any specific document
+- **💾 Export data**: Export all scraped data to JSON format
+
+**Alternative - Direct OpenSearch Queries**:
+```bash
+# Check document count
+source .env && curl -k -u ${OPENSEARCH_SCRAPER_USER}:${OPENSEARCH_SCRAPER_PASSWORD} "https://localhost:9200/darkweb-content/_count?pretty"
+
+# View latest documents
+source .env && curl -k -u ${OPENSEARCH_SCRAPER_USER}:${OPENSEARCH_SCRAPER_PASSWORD} "https://localhost:9200/darkweb-content/_search?size=5&sort=timestamp:desc&pretty"
+
+# Search for specific content
+source .env && curl -k -u ${OPENSEARCH_SCRAPER_USER}:${OPENSEARCH_SCRAPER_PASSWORD} "https://localhost:9200/darkweb-content/_search?q=search_term&pretty"
+```
 
 ## 📊 Configuration
 
@@ -496,6 +529,12 @@ docker compose logs security-setup
 
 # Check OpenSearch health
 source .env && curl -k -u ${OPENSEARCH_SCRAPER_USER}:${OPENSEARCH_SCRAPER_PASSWORD} https://localhost:9200/_cluster/health
+
+# View scraped data interactively
+uv run python view_data.py
+
+# Test Tor connection
+docker compose exec scraper python3 test_tor_connection.py
 ```
 
 ### Common Issues & Solutions
@@ -511,6 +550,10 @@ source .env && curl -k -u ${OPENSEARCH_SCRAPER_USER}:${OPENSEARCH_SCRAPER_PASSWO
 | **OpenSearch Security Errors** | `StaticResourceException`, `Not yet initialized` | Fix certificate permissions and restart containers |
 | **Scraper Connection Failures** | `Failed to connect to OpenSearch after multiple retries` | See [Authentication Issues](#authentication-issues) below |
 | **Security Setup Warnings** | `FORBIDDEN` messages in security-setup logs | Normal behavior - see [Security Setup Notes](#security-setup-notes) |
+| **Data Viewer Issues** | `ModuleNotFoundError: No module named 'dotenv'` | Install dependencies with `uv add python-dotenv` |
+| **No Scraped Data Visible** | Data viewer shows 0 documents | Wait for scraper to collect data or check scraper logs |
+| **Data Viewer Issues** | `ModuleNotFoundError: No module named 'dotenv'` | Install dependencies with `uv add python-dotenv` |
+| **No Scraped Data Visible** | Data viewer shows 0 documents | Wait for scraper to collect data or check scraper logs |
 
 ### Certificate Permission Issues
 
@@ -666,7 +709,10 @@ dark_web_scrapper/
 │   │       └── tor_spider.py     # Main spider with Tor integration
 │   ├── Dockerfile                # Scraper container build recipe
 │   ├── entrypoint.sh            # Container startup script
-│   └── pyproject.toml           # Python dependencies
+│   ├── test_tor_connection.py   # Tor connection validation script
+│   ├── view_data.py             # Interactive data viewer and analysis tool
+│   ├── pyproject.toml           # Python dependencies
+│   └── uv.lock                  # UV package manager lock file
 │
 ├── 🐳 Docker & Configuration
 │   ├── docker-compose.yml        # Multi-container orchestration with SSL
@@ -696,6 +742,25 @@ dark_web_scrapper/
 - **FORBIDDEN messages** in security-setup logs are normal during startup
 - **Wait for confirmation** before testing connections: `✅ Custom user authentication successful!`
 
+### Package Management
+This project uses **uv** as the Python package manager for faster dependency resolution and installation:
+
+```bash
+# Install new dependencies
+uv add package-name
+
+# Run Python scripts with uv
+uv run python script.py
+
+# Install from requirements
+uv sync
+```
+
+**Why uv?**
+- **10-100x faster** than pip for dependency resolution
+- **Better dependency management** with lock files
+- **Compatible** with existing pip/poetry workflows
+
 ### If Setup Fails
 ```bash
 # Complete reset (removes all data)
@@ -716,4 +781,10 @@ docker compose logs -f
 
 # Check specific service
 docker compose logs scraper --tail=50
+
+# View scraped data and statistics
+uv run python view_data.py
+
+# Check data collection progress
+source .env && curl -k -u ${OPENSEARCH_SCRAPER_USER}:${OPENSEARCH_SCRAPER_PASSWORD} "https://localhost:9200/darkweb-content/_count?pretty"
 ```

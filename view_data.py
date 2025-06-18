@@ -6,15 +6,20 @@ import requests
 import json
 from urllib3.exceptions import InsecureRequestWarning
 import urllib3
+import os
+from dotenv import load_dotenv
 
 # Disable SSL warnings for self-signed certificates
 urllib3.disable_warnings(InsecureRequestWarning)
 
 # OpenSearch configuration
+# Load environment variables
+load_dotenv()
+
 OPENSEARCH_URL = "https://localhost:9200"
-INDEX_NAME = "darkweb-content"
-USERNAME = "scraper_user"
-PASSWORD = "uiyr83q8yuah879256755^^%$%yjhuir6544323***"
+INDEX_NAME = os.getenv("OPENSEARCH_INDEX", "darkweb-content")
+USERNAME = os.getenv("OPENSEARCH_SCRAPER_USER", "darkweb_scraper_2024")
+PASSWORD = os.getenv("OPENSEARCH_SCRAPER_PASSWORD", "SecureDarkWeb!P@ssw0rd#2024")
 
 def get_document_count():
     """Get total number of documents in the index"""

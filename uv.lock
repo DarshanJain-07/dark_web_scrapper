@@ -153,16 +153,16 @@ wheels = [
 [[package]]
 name = "dark-web-scrapper"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "lxml" },
     { name = "opensearch-py" },
     { name = "pyopenssl" },
     { name = "python-dotenv" },
+    { name = "requests" },
     { name = "scrapy" },
     { name = "selenium" },
     { name = "service-identity" },
-    { name = "tbselenium" },
     { name = "twisted" },
 ]
 
@@ -172,10 +172,10 @@ requires-dist = [
     { name = "opensearch-py", specifier = ">=2.8.0" },
     { name = "pyopenssl", specifier = ">=25.1.0" },
     { name = "python-dotenv", specifier = ">=1.1.0" },
+    { name = "requests", specifier = ">=2.31.0" },
     { name = "scrapy", specifier = ">=2.13.1" },
     { name = "selenium", specifier = ">=4.33.0" },
     { name = "service-identity", specifier = ">=24.2.0" },
-    { name = "tbselenium", specifier = ">=0.9.0" },
     { name = "twisted", specifier = ">=25.5.0" },
 ]
 
@@ -603,15 +603,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/e8/c4/ba2f8066cceb6f233
 wheels = [
     { url = "https://files.pythonhosted.org/packages/32/46/9cb0e58b2deb7f82b84065f37f3bffeb12413f947f9388e4cac22c4621ce/sortedcontainers-2.4.0-py2.py3-none-any.whl", hash = "sha256:a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0", size = 29575, upload-time = "2021-05-16T22:03:41.177Z" },
 ]
-
-[[package]]
-name = "tbselenium"
-version = "0.9.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "selenium" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/10/62/c5ae783cc1abf534b5dcbd0b04ce4c582cf90840eca9876e5fe914b257e3/tbselenium-0.9.0.tar.gz", hash = "sha256:18ad648abd240c6493a00370044f2bcacdbf1e13e870da75e69d4ce225ec087a", size = 23671, upload-time = "2024-10-23T14:59:04.344Z" }
 
 [[package]]
 name = "tldextract"
