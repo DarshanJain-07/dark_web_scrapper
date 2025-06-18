@@ -1,0 +1,32 @@
+{
+  "schedules": {
+    "daily_light_cleanup": "02:00",
+    "weekly_full_cleanup": "sunday 03:00",
+    "monthly_deep_cleanup": "1 04:00"
+  },
+  "cleanup_settings": {
+    "url_duplicates": true,
+    "content_duplicates": true,
+    "similar_content": false,
+    "similarity_threshold": 0.95,
+    "strategy": "latest",
+    "dry_run": false
+  },
+  "thresholds": {
+    "max_duplicates_percent": 20,
+    "max_index_size_gb": 10,
+    "min_cleanup_interval_hours": 6
+  },
+  "notifications": {
+    "enabled": false,
+    "email": "",
+    "smtp_server": "smtp.gmail.com",
+    "smtp_port": 587,
+    "smtp_user": "",
+    "smtp_password": ""
+  },
+  "retention": {
+    "keep_logs_days": 30,
+    "keep_stats_days": 90
+  }
+}

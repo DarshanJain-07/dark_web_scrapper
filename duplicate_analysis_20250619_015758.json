@@ -1,0 +1,60 @@
+{
+  "timestamp": "2025-06-18T20:27:58.904541",
+  "url_analysis": {
+    "total_documents": 11,
+    "unique_urls": 11,
+    "duplicate_urls": 0,
+    "total_duplicates": 0,
+    "duplicate_details": {},
+    "url_timestamps": {
+      "http://juhanurmihxlp77nkq76byazcldy2hlmovfu2epvl5ankdibsot4csyd.onion/blacklist/banned/": [
+        "2025-06-18T20:12:45.930589"
+      ],
+      "http://juhanurmihxlp77nkq76byazcldy2hlmovfu2epvl5ankdibsot4csyd.onion/onions/": [
+        "2025-06-18T20:12:45.890052"
+      ],
+      "http://juhanurmihxlp77nkq76byazcldy2hlmovfu2epvl5ankdibsot4csyd.onion/documentation/": [
+        "2025-06-18T20:12:22.369189"
+      ],
+      "http://juhanurmihxlp77nkq76byazcldy2hlmovfu2epvl5ankdibsot4csyd.onion/about/": [
+        "2025-06-18T20:11:58.442882"
+      ],
+      "http://juhanurmihxlp77nkq76byazcldy2hlmovfu2epvl5ankdibsot4csyd.onion/add/": [
+        "2025-06-18T20:11:58.432637"
+      ],
+      "http://juhanurmihxlp77nkq76byazcldy2hlmovfu2epvl5ankdibsot4csyd.onion/privacy/": [
+        "2025-06-18T20:11:58.424829"
+      ],
+      "http://juhanurmihxlp77nkq76byazcldy2hlmovfu2epvl5ankdibsot4csyd.onion/terms/": [
+        "2025-06-18T20:11:58.415414"
+      ],
+      "http://juhanurmihxlp77nkq76byazcldy2hlmovfu2epvl5ankdibsot4csyd.onion/blacklist/": [
+        "2025-06-18T20:11:58.405647"
+      ],
+      "http://juhanurmihxlp77nkq76byazcldy2hlmovfu2epvl5ankdibsot4csyd.onion/legal/": [
+        "2025-06-18T20:11:58.386524"
+      ],
+      "http://juhanurmihxlp77nkq76byazcldy2hlmovfu2epvl5ankdibsot4csyd.onion/documentation/indexing/": [
+        "2025-06-18T20:11:58.381090"
+      ],
+      "http://juhanurmihxlp77nkq76byazcldy2hlmovfu2epvl5ankdibsot4csyd.onion/": [
+        "2025-06-18T20:11:21.080007"
+      ]
+    }
+  },
+  "content_analysis": {
+    "total_content_hashes": 11,
+    "duplicate_content_groups": 0,
+    "total_content_duplicates": 0,
+    "duplicate_details": {}
+  },
+  "temporal_analysis": {
+    "same_day_duplicates": 0,
+    "same_hour_duplicates": 0,
+    "rapid_duplicates": 0,
+    "url_frequency": {}
+  },
+  "recommendations": [
+    "\ud83d\udcca Current efficiency: 100.0% (11/11 unique). Potential space savings: 0 documents."
+  ]
+}

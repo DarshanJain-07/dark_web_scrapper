@@ -21,7 +21,10 @@ from .models import (
     DocumentResponse,
     HealthResponse,
     StatsResponse,
-    URLListResponse
+    URLListResponse,
+    DuplicateAnalysisResponse,
+    CleanupResponse,
+    CleanupRequest
 )
 
 # Configure logging
@@ -205,6 +208,88 @@ async def get_urls(
     except Exception as e:
         logger.error(f"Failed to get URLs: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get URLs: {str(e)}")
+
+@app.get("/duplicates/analyze", response_model=DuplicateAnalysisResponse)
+async def analyze_duplicates():
+    """Analyze duplicate data patterns."""
+    try:
+        # Import here to avoid circular imports
+        import sys
+        import os
+
+        # Add the project root to Python path
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        deduplication_path = os.path.join(project_root, 'deduplication')
+        if deduplication_path not in sys.path:
+            sys.path.insert(0, deduplication_path)
+
+        from duplicate_analyzer import DuplicateAnalyzer
+
+        analyzer = DuplicateAnalyzer()
+        results = analyzer.run_full_analysis()
+
+        url_analysis = results['url_analysis']
+        content_analysis = results['content_analysis']
+
+        # Calculate efficiency
+        efficiency = 0
+        if url_analysis['total_documents'] > 0:
+            efficiency = (url_analysis['unique_urls'] / url_analysis['total_documents']) * 100
+
+        return DuplicateAnalysisResponse(
+            total_documents=url_analysis['total_documents'],
+            unique_urls=url_analysis['unique_urls'],
+            duplicate_urls=url_analysis['duplicate_urls'],
+            total_duplicates=url_analysis['total_duplicates'],
+            duplicate_content_groups=content_analysis['duplicate_content_groups'],
+            total_content_duplicates=content_analysis['total_content_duplicates'],
+            efficiency_percent=efficiency,
+            recommendations=results['recommendations'],
+            analysis_timestamp=datetime.utcnow()
+        )
+
+    except Exception as e:
+        logger.error(f"Duplicate analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Duplicate analysis failed: {str(e)}")
+
+@app.post("/duplicates/cleanup", response_model=CleanupResponse)
+async def cleanup_duplicates(request: CleanupRequest):
+    """Trigger manual duplicate cleanup."""
+    try:
+        # Import here to avoid circular imports
+        import sys
+        import os
+
+        # Add the project root to Python path
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        deduplication_path = os.path.join(project_root, 'deduplication')
+        if deduplication_path not in sys.path:
+            sys.path.insert(0, deduplication_path)
+
+        from cleanup_duplicates import DuplicateCleanup
+
+        cleanup = DuplicateCleanup(dry_run=request.dry_run)
+        results = cleanup.run_cleanup(
+            cleanup_types=request.cleanup_types,
+            strategy=request.strategy,
+            similarity_threshold=request.similarity_threshold
+        )
+
+        return CleanupResponse(
+            cleanup_types=request.cleanup_types,
+            strategy=request.strategy,
+            dry_run=request.dry_run,
+            documents_processed=results['processed'],
+            url_duplicates_removed=results['url_duplicates_removed'],
+            content_duplicates_removed=results['content_duplicates_removed'],
+            total_removed=results['total_removed'],
+            errors=results['errors'],
+            cleanup_timestamp=datetime.utcnow()
+        )
+
+    except Exception as e:
+        logger.error(f"Cleanup failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Cleanup failed: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

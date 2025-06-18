@@ -103,7 +103,51 @@ class ErrorResponse(BaseModel):
     error: str = Field(..., description="Error message")
     detail: Optional[str] = Field(None, description="Detailed error information")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Error timestamp")
-    
+
+    class Config:
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
+
+
+class DuplicateAnalysisResponse(BaseModel):
+    """Model for duplicate analysis response."""
+    total_documents: int = Field(..., description="Total number of documents")
+    unique_urls: int = Field(..., description="Number of unique URLs")
+    duplicate_urls: int = Field(..., description="Number of URLs with duplicates")
+    total_duplicates: int = Field(..., description="Total number of duplicate documents")
+    duplicate_content_groups: int = Field(..., description="Number of content duplicate groups")
+    total_content_duplicates: int = Field(..., description="Total content duplicates")
+    efficiency_percent: float = Field(..., description="Database efficiency percentage")
+    recommendations: List[str] = Field(..., description="Cleanup recommendations")
+    analysis_timestamp: datetime = Field(..., description="When analysis was performed")
+
+    class Config:
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
+
+
+class CleanupRequest(BaseModel):
+    """Model for cleanup requests."""
+    cleanup_types: List[str] = Field(["url", "content"], description="Types of cleanup to perform")
+    strategy: str = Field("latest", description="Strategy for selecting documents to keep")
+    similarity_threshold: float = Field(0.95, ge=0.0, le=1.0, description="Similarity threshold for content cleanup")
+    dry_run: bool = Field(True, description="Whether to perform a dry run")
+
+
+class CleanupResponse(BaseModel):
+    """Model for cleanup response."""
+    cleanup_types: List[str] = Field(..., description="Types of cleanup performed")
+    strategy: str = Field(..., description="Strategy used")
+    dry_run: bool = Field(..., description="Whether this was a dry run")
+    documents_processed: int = Field(..., description="Number of documents processed")
+    url_duplicates_removed: int = Field(..., description="URL duplicates removed")
+    content_duplicates_removed: int = Field(..., description="Content duplicates removed")
+    total_removed: int = Field(..., description="Total documents removed")
+    errors: int = Field(..., description="Number of errors encountered")
+    cleanup_timestamp: datetime = Field(..., description="When cleanup was performed")
+
     class Config:
         json_encoders = {
             datetime: lambda v: v.isoformat()

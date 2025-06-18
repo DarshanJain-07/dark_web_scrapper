@@ -1,0 +1,7 @@
+# Deduplication module requirements
+schedule>=1.2.0
+redis>=4.5.0
+difflib2>=0.1.0
+python-dotenv>=1.0.0
+opensearch-py>=2.0.0
+smtplib2>=0.2.0
