@@ -1,0 +1,86 @@
+services:
+  opensearch-node:
+    image: opensearchproject/opensearch:2.11.0
+    container_name: opensearch-node
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=opensearch-node
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true   #disable swapping
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "plugins.security.disabled=false"
+      - "plugins.security.ssl.http.enabled=true"
+      - "plugins.security.ssl.transport.enabled=true"
+      - "plugins.security.ssl.http.pemcert_filepath=certs/opensearch.pem"
+      - "plugins.security.ssl.http.pemkey_filepath=certs/opensearch-key.pem"
+      - "plugins.security.ssl.http.pemtrustedcas_filepath=certs/root-ca.pem"
+      - "plugins.security.ssl.transport.pemcert_filepath=certs/opensearch.pem"
+      - "plugins.security.ssl.transport.pemkey_filepath=certs/opensearch-key.pem"
+      - "plugins.security.ssl.transport.pemtrustedcas_filepath=certs/root-ca.pem"
+      - "plugins.security.ssl.transport.enforce_hostname_verification=false"
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_SCRAPER_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sS -k -u admin:admin https://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=50s"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536 # maximum number of open files for the OpenSearch user, set to at least 65536 on modern systems
+        hard: 65536
+    volumes:
+      - ./opensearch.yml:/usr/share/opensearch/config/opensearch.yml
+      - ./certs:/usr/share/opensearch/config/certs
+      - opensearch-data:/usr/share/opensearch/data
+    networks:
+      - opensearch-net
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+
+  security-setup:
+    image: curlimages/curl:latest
+    container_name: security-setup
+    depends_on:
+      opensearch-node:
+        condition: service_healthy
+    networks:
+      - opensearch-net
+    environment:
+      - OPENSEARCH_SCRAPER_USER=${OPENSEARCH_SCRAPER_USER}
+      - OPENSEARCH_SCRAPER_PASSWORD=${OPENSEARCH_SCRAPER_PASSWORD}
+    volumes:
+      - ./setup-security.sh:/setup-security.sh
+    command: sh /setup-security.sh
+
+  scraper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: scraper
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      opensearch-node:
+        condition: service_healthy
+      security-setup:
+        condition: service_completed_successfully
+    networks:
+      - opensearch-net
+    environment:
+      - OPENSEARCH_HOST=opensearch-node
+      - OPENSEARCH_PORT=9200
+      - OPENSEARCH_INDEX=${OPENSEARCH_INDEX:-darkweb-content}
+      - START_URLS=${START_URLS:-http://httpvygrqr64ktdrztcrhhlx4rorqyuyz5nrmaupncneiszqvrxkw4xyd.onion/}
+      - OPENSEARCH_USER=${OPENSEARCH_SCRAPER_USER}
+      - OPENSEARCH_PASSWORD=${OPENSEARCH_SCRAPER_PASSWORD}
+    command: /entrypoint.sh
+
+volumes:
+  opensearch-data:
+
+networks:
+  opensearch-net: 

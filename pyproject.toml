@@ -1,0 +1,24 @@
+[project]
+name = "dark-web-scrapper"
+version = "0.1.0"
+description = "A dark web scraper using Scrapy and Tor"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "lxml>=5.4.0",
+    "opensearch-py>=2.8.0",
+    "pyopenssl>=25.1.0",
+    "python-dotenv>=1.1.0",
+    "scrapy>=2.13.1",
+    "selenium>=4.33.0",
+    "service-identity>=24.2.0",
+    "twisted>=25.5.0",
+    "requests>=2.31.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["dark_web_scraper"]

@@ -1,0 +1,34 @@
+# Production OpenSearch configuration with full SSL security
+cluster.name: opensearch-cluster
+node.name: opensearch-node
+discovery.type: single-node
+bootstrap.memory_lock: true
+
+# Network configuration - bind to all interfaces for container access
+network.host: 0.0.0.0
+
+# Security configuration - authentication and SSL enabled for production
+plugins.security.ssl.http.enabled: true
+plugins.security.ssl.transport.enabled: true
+plugins.security.allow_default_init_securityindex: true
+plugins.security.restapi.roles_enabled: ["all_access", "security_rest_api_access"]
+plugins.security.system_indices.enabled: true
+
+# SSL Certificate configuration
+plugins.security.ssl.http.pemcert_filepath: certs/opensearch.pem
+plugins.security.ssl.http.pemkey_filepath: certs/opensearch-key.pem
+plugins.security.ssl.http.pemtrustedcas_filepath: certs/root-ca.pem
+plugins.security.ssl.transport.pemcert_filepath: certs/opensearch.pem
+plugins.security.ssl.transport.pemkey_filepath: certs/opensearch-key.pem
+plugins.security.ssl.transport.pemtrustedcas_filepath: certs/root-ca.pem
+
+# SSL Security settings
+plugins.security.ssl.transport.enforce_hostname_verification: false
+plugins.security.ssl.http.clientauth_mode: OPTIONAL
+
+# Admin DN configuration for security admin tool
+plugins.security.authcz.admin_dn:
+  - "CN=opensearch-node,OU=Security,O=OpenSearch,L=San Francisco,ST=CA,C=US"
+
+# Node configuration
+node.max_local_storage_nodes: 3

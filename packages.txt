@@ -1,0 +1,9 @@
+Scrapy
+selenium
+tbselenium
+opensearch-py
+python-dotenv
+lxml
+Twisted
+pyOpenSSL
+service_identity 

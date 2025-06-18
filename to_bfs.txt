@@ -1,0 +1,10 @@
+You can easily switch to a BFS strategy. To do this, you would add the following settings to your settings.py file:
+
+# settings.py
+
+# ... other settings
+
+# Configure Scrapy to use a FIFO queue for a BFS crawling strategy
+DEPTH_PRIORITY = 1
+SCHEDULER_DISK_QUEUE = 'scrapy.squeues.PickleFifoDiskQueue'
+SCHEDULER_MEMORY_QUEUE = 'scrapy.squeues.FifoMemoryQueue'
